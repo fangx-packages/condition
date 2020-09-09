@@ -5,5 +5,5 @@
 Via Composer
 
 ```
-composer require fangx/laravel-package
+composer require fangx/condition
 ```
