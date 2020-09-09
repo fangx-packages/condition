@@ -17,6 +17,7 @@ namespace Fangx\Tests;
 use Fangx\Condition\Condition;
 use Fangx\Condition\Fields\EqualsField;
 use Fangx\Condition\Groups\GroupAndNode;
+use Fangx\Condition\Groups\GroupNotNode;
 use Fangx\Condition\Groups\GroupOrNode;
 use PHPUnit\Framework\TestCase;
 
@@ -35,6 +36,7 @@ class ConditionTest extends TestCase
         $this->assertTrue($node->check(['f' => 'foo', 'b' => 'bar']));
         $this->assertFalse($node->check(['f' => 'foo']));
         $this->assertFalse($node->check(['b' => 'bar']));
+        $this->assertFalse($node->check());
         $this->assertEquals('{"and":[{"equals":{"f":"foo"}},{"equals":{"b":"bar"}}]}', Condition::encode($node));
     }
 
@@ -48,6 +50,21 @@ class ConditionTest extends TestCase
         $this->assertTrue($node->check(['f' => 'foo', 'b' => 'bar']));
         $this->assertTrue($node->check(['f' => 'foo']));
         $this->assertTrue($node->check(['b' => 'bar']));
+        $this->assertFalse($node->check());
         $this->assertEquals('{"or":[{"equals":{"f":"foo"}},{"equals":{"b":"bar"}}]}', Condition::encode($node));
+    }
+
+    public function testGroupNotNode()
+    {
+        $node = GroupNotNode::create([
+            EqualsField::create('f', 'foo'),
+            EqualsField::create('b', 'bar'),
+        ]);
+
+        $this->assertFalse($node->check(['f' => 'foo', 'b' => 'bar']));
+        $this->assertFalse($node->check(['f' => 'foo']));
+        $this->assertFalse($node->check(['b' => 'bar']));
+        $this->assertTrue($node->check());
+        $this->assertEquals('{"not":[{"equals":{"f":"foo"}},{"equals":{"b":"bar"}}]}', Condition::encode($node));
     }
 }

@@ -40,7 +40,7 @@
     "scripts": {
         "cs-fix": "php-cs-fixer fix $1",
         "test": "./vendor/bin/phpunit -c phpunit.xml --color=always",
-        "test-coverage": "php -d zend_extension=xdebug ./vendor/bin/phpunit -c phpunit.xml --color=always --coverage-html .codeCoverage"
+        "test-coverage": "php -d zend_extension=xdebug ./vendor/bin/phpunit -c phpunit.xml --coverage-filter=src --color=always --coverage-html .codeCoverage"
     },
     "extra": {
         "laravel": {

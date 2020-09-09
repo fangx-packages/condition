@@ -23,7 +23,11 @@ trait GroupNodeHelper
 
     public function __construct($children = [])
     {
-        $this->children = $children;
+        foreach ($children as $child) {
+            if ($child instanceof NodeInterface) {
+                $this->append($child);
+            }
+        }
     }
 
     public function children(): array
