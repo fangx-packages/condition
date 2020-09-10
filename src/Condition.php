@@ -69,11 +69,13 @@ class Condition
         return json_encode(static::pack($node));
     }
 
+    /** @codeCoverageIgnore 暂时不需要解码 */
     public static function decode($json)
     {
         return static::unpack(json_decode($json, true));
     }
 
+    /** @codeCoverageIgnore 暂时不需要解码 */
     public static function unpack($json)
     {
         return $json;
