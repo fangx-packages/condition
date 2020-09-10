@@ -15,7 +15,18 @@ declare(strict_types=1);
 namespace Fangx\Condition;
 
 use Fangx\Condition\Contracts\EndNodeInterface;
+use Fangx\Condition\Contracts\GroupNodeInterface;
 use Fangx\Condition\Contracts\NodeInterface;
+use Fangx\Condition\Fields\ContainsField;
+use Fangx\Condition\Fields\EqualsField;
+use Fangx\Condition\Fields\GteField;
+use Fangx\Condition\Fields\GtField;
+use Fangx\Condition\Fields\LteField;
+use Fangx\Condition\Fields\LtField;
+use Fangx\Condition\Fields\RegexpField;
+use Fangx\Condition\Groups\GroupAndNode;
+use Fangx\Condition\Groups\GroupNotNode;
+use Fangx\Condition\Groups\GroupOrNode;
 
 class Condition
 {
@@ -30,8 +41,6 @@ class Condition
     const CONDITION_EQUALS = 'equals';
 
     const CONDITION_CONTAINS = 'contains';
-
-    const CONDITION_RANGE = 'range';
 
     const CONDITION_REGEXP = 'regexp';
 
@@ -50,12 +59,14 @@ class Condition
     public static function pack(NodeInterface $node)
     {
         $encode = [];
-        if ($node instanceof EndNodeInterface) {
+        if (self::isEndNode($node)) {
             $encode = $node->children();
-        } else {
+        } elseif (self::isGroupNode($node)) {
             foreach ($node->children() as $child) {
-                /* @var NodeInterface $child */
-                $encode[] = static::pack($child);
+                if (self::isValidNode($child)) {
+                    /* @var NodeInterface $child */
+                    $encode[] = static::pack($child);
+                }
             }
         }
 
@@ -69,15 +80,82 @@ class Condition
         return json_encode(static::pack($node));
     }
 
-    /** @codeCoverageIgnore 暂时不需要解码 */
-    public static function decode($json)
+    public static function decode($node)
     {
-        return static::unpack(json_decode($json, true));
+        return static::unpack(json_decode($node, true));
     }
 
-    /** @codeCoverageIgnore 暂时不需要解码 */
-    public static function unpack($json)
+    public static function unpack(array $node)
     {
-        return $json;
+        foreach ($node as $condition => $child) {
+            if (($class = self::isValidNode($condition)) && self::isGroupNode($condition)) {
+                /** @var GroupNodeInterface $c */
+                $c = new $class();
+                foreach ($child as $item) {
+                    $c->append(static::unpack($item));
+                }
+                return $c;
+            }
+            if (($class = self::isValidNode($condition)) && self::isEndNode($condition)) {
+                return new $class(...static::unpack($child));
+            }
+            return [$condition, $child];
+        }
+
+        return null;
+    }
+
+    public static function isValidNode($condition)
+    {
+        if (is_object($condition)) {
+            return $condition instanceof NodeInterface;
+        }
+
+        return [
+            Condition::CONDITION_AND => GroupAndNode::class,
+            Condition::CONDITION_OR => GroupOrNode::class,
+            Condition::CONDITION_NOT => GroupNotNode::class,
+            Condition::CONDITION_EQUALS => EqualsField::class,
+            Condition::CONDITION_CONTAINS => ContainsField::class,
+            Condition::CONDITION_REGEXP => RegexpField::class,
+            Condition::CONDITION_LT => LtField::class,
+            Condition::CONDITION_LTE => LteField::class,
+            Condition::CONDITION_GT => GtField::class,
+            Condition::CONDITION_GTE => GteField::class,
+            // Condition::CONDITION_NETWORK => GroupAndNode::class,
+            // Condition::CONDITION_HAS_FIELDS => GroupAndNode::class,
+        ][$condition] ?? null;
+    }
+
+    public static function isGroupNode($condition)
+    {
+        if (is_object($condition)) {
+            return $condition instanceof GroupNodeInterface;
+        }
+
+        return in_array($condition, [
+            Condition::CONDITION_AND,
+            Condition::CONDITION_OR,
+            Condition::CONDITION_NOT,
+        ]);
+    }
+
+    public static function isEndNode($condition)
+    {
+        if (is_object($condition)) {
+            return $condition instanceof EndNodeInterface;
+        }
+
+        return in_array($condition, [
+            Condition::CONDITION_EQUALS,
+            Condition::CONDITION_CONTAINS,
+            Condition::CONDITION_REGEXP,
+            Condition::CONDITION_LT,
+            Condition::CONDITION_LTE,
+            Condition::CONDITION_GT,
+            Condition::CONDITION_GTE,
+            Condition::CONDITION_NETWORK,
+            Condition::CONDITION_HAS_FIELDS,
+        ]);
     }
 }

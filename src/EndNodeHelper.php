@@ -20,7 +20,7 @@ trait EndNodeHelper
 
     protected $value;
 
-    public function __construct(string $field, $value)
+    public function __construct(string $field = '', $value = null)
     {
         $this->setField($field)->setValue($value);
     }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Fangx\Tests;
 
+use Fangx\Condition\Condition;
 use Fangx\Condition\Fields\ContainsField;
 use Fangx\Condition\Fields\EqualsField;
 use Fangx\Condition\Fields\GteField;
@@ -33,26 +34,31 @@ class ConditionTest extends TestCase
 {
     public function testMixNode()
     {
-        $node = GroupAndNode::create([
-            GroupAndNode::create([
-                GroupOrNode::create([
-                    EqualsField::create('f-or-1', 'f1'),
-                    EqualsField::create('f-or-2', 'f2'),
-                ]),
-                GroupOrNode::create([
-                    EqualsField::create('b-or-1', 'b1'),
-                    EqualsField::create('b-or-2', 'b2'),
-                ]),
-            ]),
-            GroupAndNode::create([
-                GroupNotNode::create([
-                    EqualsField::create('f-not', 'f'),
-                ]),
-                GroupNotNode::create([
-                    EqualsField::create('b-not', 'b'),
-                ]),
-            ]),
-        ]);
+        $node = $this->node();
+
+        $this->assertFalse($node->check());
+
+        $this->assertTrue($node->check(['f-not', 'ff', 'b-not' => 'bb', 'b-or-1' => 'b1', 'f-or-1' => 'f1']));
+
+        $this->assertEquals('{"and":[{"and":[{"or":[{"equals":{"f-or-1":"f1"}},{"equals":{"f-or-2":"f2"}}]},{"or":[{"equals":{"b-or-1":"b1"}},{"equals":{"b-or-2":"b2"}}]}]},{"and":[{"not":[{"equals":{"f-not":"f"}}]},{"not":[{"equals":{"b-not":"b"}}]}]}]}', $node->encode());
+    }
+
+    public function testUnpackNode()
+    {
+        $this->assertEmpty(Condition::unpack([]));
+
+        $node = Condition::unpack($this->node()->pack());
+
+        $this->assertFalse($node->check());
+
+        $this->assertTrue($node->check(['f-not', 'ff', 'b-not' => 'bb', 'b-or-1' => 'b1', 'f-or-1' => 'f1']));
+
+        $this->assertEquals('{"and":[{"and":[{"or":[{"equals":{"f-or-1":"f1"}},{"equals":{"f-or-2":"f2"}}]},{"or":[{"equals":{"b-or-1":"b1"}},{"equals":{"b-or-2":"b2"}}]}]},{"and":[{"not":[{"equals":{"f-not":"f"}}]},{"not":[{"equals":{"b-not":"b"}}]}]}]}', $node->encode());
+    }
+
+    public function testDecodeNode()
+    {
+        $node = Condition::decode($this->node()->encode());
 
         $this->assertFalse($node->check());
 
@@ -177,5 +183,29 @@ class ConditionTest extends TestCase
         $this->assertFalse($node->check(['f' => '1.5']));
         $this->assertFalse($node->check());
         $this->assertEquals('{"regexp":{"f":"\/^\\\d$\/"}}', $node->encode());
+    }
+
+    private function node()
+    {
+        return GroupAndNode::create([
+            GroupAndNode::create([
+                GroupOrNode::create([
+                    EqualsField::create('f-or-1', 'f1'),
+                    EqualsField::create('f-or-2', 'f2'),
+                ]),
+                GroupOrNode::create([
+                    EqualsField::create('b-or-1', 'b1'),
+                    EqualsField::create('b-or-2', 'b2'),
+                ]),
+            ]),
+            GroupAndNode::create([
+                GroupNotNode::create([
+                    EqualsField::create('f-not', 'f'),
+                ]),
+                GroupNotNode::create([
+                    EqualsField::create('b-not', 'b'),
+                ]),
+            ]),
+        ]);
     }
 }
