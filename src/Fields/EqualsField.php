@@ -18,11 +18,13 @@ use Fangx\Condition\Condition;
 use Fangx\Condition\Contracts\EndNodeInterface;
 use Fangx\Condition\Creator;
 use Fangx\Condition\EndNodeHelper;
+use Fangx\Condition\Packable;
 
 class EqualsField implements EndNodeInterface
 {
     use EndNodeHelper;
     use Creator;
+    use Packable;
 
     public function check($args = []): bool
     {

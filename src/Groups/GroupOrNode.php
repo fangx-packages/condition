@@ -19,11 +19,13 @@ use Fangx\Condition\Contracts\GroupNodeInterface;
 use Fangx\Condition\Contracts\NodeInterface;
 use Fangx\Condition\Creator;
 use Fangx\Condition\GroupNodeHelper;
+use Fangx\Condition\Packable;
 
 class GroupOrNode implements GroupNodeInterface
 {
     use GroupNodeHelper;
     use Creator;
+    use Packable;
 
     public function check($args = []): bool
     {

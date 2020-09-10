@@ -14,7 +14,6 @@ declare(strict_types=1);
 
 namespace Fangx\Tests;
 
-use Fangx\Condition\Condition;
 use Fangx\Condition\Fields\ContainsField;
 use Fangx\Condition\Fields\EqualsField;
 use Fangx\Condition\Fields\GteField;
@@ -59,7 +58,7 @@ class ConditionTest extends TestCase
 
         $this->assertTrue($node->check(['f-not', 'ff', 'b-not' => 'bb', 'b-or-1' => 'b1', 'f-or-1' => 'f1']));
 
-        $this->assertEquals('{"and":[{"and":[{"or":[{"equals":{"f-or-1":"f1"}},{"equals":{"f-or-2":"f2"}}]},{"or":[{"equals":{"b-or-1":"b1"}},{"equals":{"b-or-2":"b2"}}]}]},{"and":[{"not":[{"equals":{"f-not":"f"}}]},{"not":[{"equals":{"b-not":"b"}}]}]}]}', Condition::encode($node));
+        $this->assertEquals('{"and":[{"and":[{"or":[{"equals":{"f-or-1":"f1"}},{"equals":{"f-or-2":"f2"}}]},{"or":[{"equals":{"b-or-1":"b1"}},{"equals":{"b-or-2":"b2"}}]}]},{"and":[{"not":[{"equals":{"f-not":"f"}}]},{"not":[{"equals":{"b-not":"b"}}]}]}]}', $node->encode());
     }
 
     public function testGroupAndNode()
@@ -73,7 +72,7 @@ class ConditionTest extends TestCase
         $this->assertFalse($node->check(['f' => 'foo']));
         $this->assertFalse($node->check(['b' => 'bar']));
         $this->assertFalse($node->check());
-        $this->assertEquals('{"and":[{"equals":{"f":"foo"}},{"equals":{"b":"bar"}}]}', Condition::encode($node));
+        $this->assertEquals('{"and":[{"equals":{"f":"foo"}},{"equals":{"b":"bar"}}]}', $node->encode());
     }
 
     public function testGroupOrNode()
@@ -87,7 +86,7 @@ class ConditionTest extends TestCase
         $this->assertTrue($node->check(['f' => 'foo']));
         $this->assertTrue($node->check(['b' => 'bar']));
         $this->assertFalse($node->check());
-        $this->assertEquals('{"or":[{"equals":{"f":"foo"}},{"equals":{"b":"bar"}}]}', Condition::encode($node));
+        $this->assertEquals('{"or":[{"equals":{"f":"foo"}},{"equals":{"b":"bar"}}]}', $node->encode());
     }
 
     public function testGroupNotNode()
@@ -103,7 +102,7 @@ class ConditionTest extends TestCase
         $this->assertFalse($node->check(['f' => 'foo']));
         $this->assertFalse($node->check(['b' => 'bar']));
         $this->assertTrue($node->check());
-        $this->assertEquals('{"not":[{"equals":{"f":"foo"}},{"equals":{"b":"bar"}}]}', Condition::encode($node));
+        $this->assertEquals('{"not":[{"equals":{"f":"foo"}},{"equals":{"b":"bar"}}]}', $node->encode());
     }
 
     public function testEqualsNode()
@@ -112,7 +111,7 @@ class ConditionTest extends TestCase
 
         $this->assertTrue($node->check(['f' => 'foo']));
         $this->assertFalse($node->check());
-        $this->assertEquals('{"equals":{"f":"foo"}}', Condition::encode($node));
+        $this->assertEquals('{"equals":{"f":"foo"}}', $node->encode());
     }
 
     public function testContainsNode()
@@ -122,7 +121,7 @@ class ConditionTest extends TestCase
         $this->assertTrue($node->check(['f' => 'foo']));
         $this->assertTrue($node->check(['f' => 'fooo']));
         $this->assertFalse($node->check());
-        $this->assertEquals('{"contains":{"f":["foo","fooo"]}}', Condition::encode($node));
+        $this->assertEquals('{"contains":{"f":["foo","fooo"]}}', $node->encode());
     }
 
     public function testGteNode()
@@ -133,7 +132,7 @@ class ConditionTest extends TestCase
         $this->assertTrue($node->check(['f' => 2]));
         $this->assertTrue($node->check(['f' => 3]));
         $this->assertFalse($node->check());
-        $this->assertEquals('{"gte":{"f":2}}', Condition::encode($node));
+        $this->assertEquals('{"gte":{"f":2}}', $node->encode());
     }
 
     public function testGtNode()
@@ -144,7 +143,7 @@ class ConditionTest extends TestCase
         $this->assertFalse($node->check(['f' => 2]));
         $this->assertTrue($node->check(['f' => 3]));
         $this->assertFalse($node->check());
-        $this->assertEquals('{"gt":{"f":2}}', Condition::encode($node));
+        $this->assertEquals('{"gt":{"f":2}}', $node->encode());
     }
 
     public function testLteNode()
@@ -155,7 +154,7 @@ class ConditionTest extends TestCase
         $this->assertTrue($node->check(['f' => 2]));
         $this->assertFalse($node->check(['f' => 3]));
         $this->assertFalse($node->check());
-        $this->assertEquals('{"lte":{"f":2}}', Condition::encode($node));
+        $this->assertEquals('{"lte":{"f":2}}', $node->encode());
     }
 
     public function testLtNode()
@@ -166,7 +165,7 @@ class ConditionTest extends TestCase
         $this->assertFalse($node->check(['f' => 2]));
         $this->assertFalse($node->check(['f' => 3]));
         $this->assertFalse($node->check());
-        $this->assertEquals('{"lt":{"f":2}}', Condition::encode($node));
+        $this->assertEquals('{"lt":{"f":2}}', $node->encode());
     }
 
     public function testRegexpNode()
@@ -177,6 +176,6 @@ class ConditionTest extends TestCase
         $this->assertTrue($node->check(['f' => '1']));
         $this->assertFalse($node->check(['f' => '1.5']));
         $this->assertFalse($node->check());
-        $this->assertEquals('{"regexp":{"f":"\/^\\\d$\/"}}', Condition::encode($node));
+        $this->assertEquals('{"regexp":{"f":"\/^\\\d$\/"}}', $node->encode());
     }
 }
