@@ -11,8 +11,6 @@ composer require fangx/condition
 ### Usage
 
 ```php
-<?php
-namespace Fangx\Tests;
 
 use Fangx\Condition\Condition;
 use Fangx\Condition\Fields\ContainsField;
