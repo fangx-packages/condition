@@ -17,10 +17,12 @@ namespace Fangx\Tests;
 use Fangx\Condition\Condition;
 use Fangx\Condition\Fields\ContainsField;
 use Fangx\Condition\Fields\EqualsField;
+use Fangx\Condition\Fields\ExistsField;
 use Fangx\Condition\Fields\GteField;
 use Fangx\Condition\Fields\GtField;
 use Fangx\Condition\Fields\LteField;
 use Fangx\Condition\Fields\LtField;
+use Fangx\Condition\Fields\NetworkField;
 use Fangx\Condition\Fields\RegexpField;
 use Fangx\Condition\Groups\GroupAndNode;
 use Fangx\Condition\Groups\GroupNotNode;
@@ -38,9 +40,9 @@ class ConditionTest extends TestCase
 
         $this->assertFalse($node->check());
 
-        $this->assertTrue($node->check(['f-not', 'ff', 'b-not' => 'bb', 'b-or-1' => 'b1', 'f-or-1' => 'f1']));
+        $this->assertTrue($node->check(['f-not' => 'ff', 'b-not' => 'bb', 'b-or-1' => 'b1', 'f-or-1' => 'f1', 'ip' => '192.168.128.54']));
 
-        $this->assertEquals('{"and":[{"and":[{"or":[{"equals":{"f-or-1":"f1"}},{"equals":{"f-or-2":"f2"}}]},{"or":[{"equals":{"b-or-1":"b1"}},{"equals":{"b-or-2":"b2"}}]}]},{"and":[{"not":[{"equals":{"f-not":"f"}}]},{"not":[{"equals":{"b-not":"b"}}]}]}]}', $node->encode());
+        $this->assertEquals('{"and":[{"and":[{"or":[{"equals":{"f-or-1":"f1"}},{"equals":{"f-or-2":"f2"}}]},{"or":[{"equals":{"b-or-1":"b1"}},{"equals":{"b-or-2":"b2"}}]}]},{"and":[{"not":[{"equals":{"f-not":"f"}}]},{"not":[{"equals":{"b-not":"b"}}]}]},{"has_fields":["f-not","b-not"]},{"network":{"ip":"192.168.128.54"}}]}', $node->encode());
     }
 
     public function testUnpackNode()
@@ -51,9 +53,9 @@ class ConditionTest extends TestCase
 
         $this->assertFalse($node->check());
 
-        $this->assertTrue($node->check(['f-not', 'ff', 'b-not' => 'bb', 'b-or-1' => 'b1', 'f-or-1' => 'f1']));
+        $this->assertTrue($node->check(['f-not' => 'ff', 'b-not' => 'bb', 'b-or-1' => 'b1', 'f-or-1' => 'f1', 'ip' => '192.168.128.54']));
 
-        $this->assertEquals('{"and":[{"and":[{"or":[{"equals":{"f-or-1":"f1"}},{"equals":{"f-or-2":"f2"}}]},{"or":[{"equals":{"b-or-1":"b1"}},{"equals":{"b-or-2":"b2"}}]}]},{"and":[{"not":[{"equals":{"f-not":"f"}}]},{"not":[{"equals":{"b-not":"b"}}]}]}]}', $node->encode());
+        $this->assertEquals('{"and":[{"and":[{"or":[{"equals":{"f-or-1":"f1"}},{"equals":{"f-or-2":"f2"}}]},{"or":[{"equals":{"b-or-1":"b1"}},{"equals":{"b-or-2":"b2"}}]}]},{"and":[{"not":[{"equals":{"f-not":"f"}}]},{"not":[{"equals":{"b-not":"b"}}]}]},{"has_fields":["f-not","b-not"]},{"network":{"ip":"192.168.128.54"}}]}', $node->encode());
     }
 
     public function testDecodeNode()
@@ -62,9 +64,9 @@ class ConditionTest extends TestCase
 
         $this->assertFalse($node->check());
 
-        $this->assertTrue($node->check(['f-not', 'ff', 'b-not' => 'bb', 'b-or-1' => 'b1', 'f-or-1' => 'f1']));
+        $this->assertTrue($node->check(['f-not' => 'ff', 'b-not' => 'bb', 'b-or-1' => 'b1', 'f-or-1' => 'f1', 'ip' => '192.168.128.54']));
 
-        $this->assertEquals('{"and":[{"and":[{"or":[{"equals":{"f-or-1":"f1"}},{"equals":{"f-or-2":"f2"}}]},{"or":[{"equals":{"b-or-1":"b1"}},{"equals":{"b-or-2":"b2"}}]}]},{"and":[{"not":[{"equals":{"f-not":"f"}}]},{"not":[{"equals":{"b-not":"b"}}]}]}]}', $node->encode());
+        $this->assertEquals('{"and":[{"and":[{"or":[{"equals":{"f-or-1":"f1"}},{"equals":{"f-or-2":"f2"}}]},{"or":[{"equals":{"b-or-1":"b1"}},{"equals":{"b-or-2":"b2"}}]}]},{"and":[{"not":[{"equals":{"f-not":"f"}}]},{"not":[{"equals":{"b-not":"b"}}]}]},{"has_fields":["f-not","b-not"]},{"network":{"ip":"192.168.128.54"}}]}', $node->encode());
     }
 
     public function testGroupAndNode()
@@ -185,6 +187,39 @@ class ConditionTest extends TestCase
         $this->assertEquals('{"regexp":{"f":"\/^\\\d$\/"}}', $node->encode());
     }
 
+    public function testHasFieldsNode()
+    {
+        $node = ExistsField::create('foo', 'bar');
+
+        $this->assertTrue($node->check(['foo' => 'f', 'bar' => 'b']));
+        $this->assertFalse($node->check(['foo' => 'f']));
+        $this->assertFalse($node->check(['bar' => 'b']));
+        $this->assertEquals('{"has_fields":["foo","bar"]}', $node->encode());
+
+        $node = ExistsField::create(['foo', 'bar']);
+
+        $this->assertTrue($node->check(['foo' => 'f', 'bar' => 'b']));
+        $this->assertFalse($node->check(['foo' => 'f']));
+        $this->assertFalse($node->check(['bar' => 'b']));
+        $this->assertEquals('{"has_fields":["foo","bar"]}', $node->encode());
+    }
+
+    public function testNetworkNode()
+    {
+        $this->assertFalse(NetworkField::create('ip', '192.168.128.54')->check());
+        $this->assertFalse(NetworkField::create('ip', '192.168.128.54')->check(['ip' => 'ip_address']));
+        $this->assertTrue(NetworkField::create('ip', '192.168.128.54')->check(['ip' => '192.168.128.54']));
+        $this->assertFalse(NetworkField::create('ip', '192.168.128.54')->check(['ip' => '192.168.128.53']));
+        $this->assertTrue(NetworkField::create('ip', '192.168.128.0/8')->check(['ip' => '192.168.128.54']));
+        $this->assertFalse(NetworkField::create('ip', '192.168.128.0/8')->check(['ip' => '192.168.110.54']));
+        $this->assertTrue(NetworkField::create('ip', '192.168.0.0/16')->check(['ip' => '192.168.128.54']));
+        $this->assertTrue(NetworkField::create('ip', '192.168.0.0/16')->check(['ip' => '192.168.110.54']));
+        $this->assertFalse(NetworkField::create('ip', '192.168.0.0/16')->check(['ip' => '192.110.110.54']));
+        $this->assertFalse(NetworkField::create('ip', 'ip_address')->check(['ip' => '192.110.110.54']));
+        $this->assertEquals('{"network":{"ip":"192.168.128.54"}}', NetworkField::create('ip', '192.168.128.54')->encode());
+        $this->assertEquals('{"network":{"ip":"192.168.128.0\/8"}}', NetworkField::create('ip', '192.168.128.0/8')->encode());
+    }
+
     private function node()
     {
         return GroupAndNode::create([
@@ -206,6 +241,8 @@ class ConditionTest extends TestCase
                     EqualsField::create('b-not', 'b'),
                 ]),
             ]),
+            ExistsField::create('f-not', 'b-not'),
+            NetworkField::create('ip', '192.168.128.54'),
         ]);
     }
 }

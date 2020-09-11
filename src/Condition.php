@@ -19,10 +19,12 @@ use Fangx\Condition\Contracts\GroupNodeInterface;
 use Fangx\Condition\Contracts\NodeInterface;
 use Fangx\Condition\Fields\ContainsField;
 use Fangx\Condition\Fields\EqualsField;
+use Fangx\Condition\Fields\ExistsField;
 use Fangx\Condition\Fields\GteField;
 use Fangx\Condition\Fields\GtField;
 use Fangx\Condition\Fields\LteField;
 use Fangx\Condition\Fields\LtField;
+use Fangx\Condition\Fields\NetworkField;
 use Fangx\Condition\Fields\RegexpField;
 use Fangx\Condition\Groups\GroupAndNode;
 use Fangx\Condition\Groups\GroupNotNode;
@@ -97,6 +99,9 @@ class Condition
                 return $c;
             }
             if (($class = self::isValidNode($condition)) && self::isEndNode($condition)) {
+                if ($condition === Condition::CONDITION_HAS_FIELDS) {
+                    return new $class(...$child);
+                }
                 return new $class(...static::unpack($child));
             }
             return [$condition, $child];
@@ -122,8 +127,8 @@ class Condition
             Condition::CONDITION_LTE => LteField::class,
             Condition::CONDITION_GT => GtField::class,
             Condition::CONDITION_GTE => GteField::class,
-            // Condition::CONDITION_NETWORK => GroupAndNode::class,
-            // Condition::CONDITION_HAS_FIELDS => GroupAndNode::class,
+            Condition::CONDITION_NETWORK => NetworkField::class,
+            Condition::CONDITION_HAS_FIELDS => ExistsField::class,
         ][$condition] ?? null;
     }
 
