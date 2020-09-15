@@ -20,7 +20,7 @@ use Fangx\Condition\Creator;
 use Fangx\Condition\EndNodeHelper;
 use Fangx\Condition\Packable;
 
-class ContainsField implements EndNodeInterface
+class OneOfField implements EndNodeInterface
 {
     use EndNodeHelper;
     use Creator;
@@ -32,11 +32,11 @@ class ContainsField implements EndNodeInterface
             return false;
         }
 
-        return strpos((string)$args[$this->getField()], $this->getValue()) !== false;
+        return in_array($args[$this->getField()], (array)$this->getValue());
     }
 
     public function condition()
     {
-        return Condition::CONDITION_CONTAINS;
+        return Condition::CONDITION_ONE_OF;
     }
 }

@@ -23,6 +23,7 @@ use Fangx\Condition\Fields\GtField;
 use Fangx\Condition\Fields\LteField;
 use Fangx\Condition\Fields\LtField;
 use Fangx\Condition\Fields\NetworkField;
+use Fangx\Condition\Fields\OneOfField;
 use Fangx\Condition\Fields\RegexpField;
 use Fangx\Condition\Groups\GroupAndNode;
 use Fangx\Condition\Groups\GroupNotNode;
@@ -122,14 +123,24 @@ class ConditionTest extends TestCase
         $this->assertEquals('{"equals":{"f":"foo"}}', $node->encode());
     }
 
-    public function testContainsNode()
+    public function testOneOfNode()
     {
-        $node = ContainsField::create('f', ['foo', 'fooo']);
+        $node = OneOfField::create('f', ['foo', 'fooo']);
 
         $this->assertTrue($node->check(['f' => 'foo']));
         $this->assertTrue($node->check(['f' => 'fooo']));
         $this->assertFalse($node->check());
-        $this->assertEquals('{"contains":{"f":["foo","fooo"]}}', $node->encode());
+        $this->assertEquals('{"one_of":{"f":["foo","fooo"]}}', $node->encode());
+    }
+
+    public function testContainsNode()
+    {
+        $node = ContainsField::create('f', 'hello');
+
+        $this->assertTrue($node->check(['f' => 'hello world']));
+        $this->assertFalse($node->check(['f' => 'hi world']));
+        $this->assertFalse($node->check());
+        $this->assertEquals('{"contains":{"f":"hello"}}', $node->encode());
     }
 
     public function testGteNode()

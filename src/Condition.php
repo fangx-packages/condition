@@ -58,6 +58,8 @@ class Condition
 
     const CONDITION_HAS_FIELDS = 'has_fields';
 
+    const CONDITION_ONE_OF = 'one_of';
+
     public static function pack(NodeInterface $node)
     {
         $encode = [];
